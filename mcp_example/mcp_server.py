@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Information Toos")
+mcp = FastMCP("Information Tools")
 
 
 @mcp.tool()
@@ -103,7 +103,7 @@ def check_available_wikipedia_articles(possible_title: str) -> list[str]:
 
     """
     try:
-        search_url = f"https://de.wikipedia.org/w/index.php?search={quote_plus(possible_title.replace(' ', '_'))}"
+        search_url = f"https://de.wikipedia.org/w/index.php?search={possible_title.replace(' ', '_')}"
         response = requests.get(search_url, timeout=60)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
