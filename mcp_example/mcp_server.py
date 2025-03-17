@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Echo")
+mcp = FastMCP("Information Toos")
 
 
 @mcp.tool()
@@ -34,26 +34,18 @@ def search_web(search_term: str, num_results: int = 5) -> list:
         list: Eine Liste von Dictionaries mit den Suchergebnissen, die jeweils 'title', 'link' und 'snippet' enthalten.
 
     """
-    # Suchbegriff URL-kodieren
     encoded_search_term = quote_plus(search_term)
-
-    # User-Agent für die Anfrage festlegen
     headers = {
         # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",  # noqa: E501
     }
 
-    # HTTP-Anfrage an die Suchmaschine senden
-    # Hier verwende ich DuckDuckGo als Beispiel (es funktioniert auch mit anderen Suchmaschinen)
     search_url = f"https://html.duckduckgo.com/html/?q={encoded_search_term}"
 
     try:
         response = requests.get(search_url, headers=headers, timeout=60)
         response.raise_for_status()  # Fehler bei HTTP-Statuscode != 200 auslösen
-
-        # HTML-Inhalt parsen
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Suchergebnisse extrahieren
         results = []
         result_elements = soup.select(".result")
 
@@ -111,19 +103,15 @@ def check_available_wikipedia_articles(possible_title: str) -> list[str]:
 
     """
     try:
-        # Wikipedia-Suche-URL mit dem Suchbegriff
         search_url = f"https://de.wikipedia.org/w/index.php?search={quote_plus(possible_title.replace(' ', '_'))}"
         response = requests.get(search_url, timeout=60)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Überprüfen, ob die Suche direkt zu einem Artikel weitergeleitet wurde
+        # check if redirected to page
         if "Suchergebnisse" not in soup.title.string:
-            # Direkt zum Artikel weitergeleitet
             page_title = soup.find("h1", id="firstHeading").text.strip()
             return [page_title]
-
-        # Ansonsten, Suchergebnisse parsen
         search_results = []
 
         # Hauptsuchergebnisse finden
@@ -134,14 +122,14 @@ def check_available_wikipedia_articles(possible_title: str) -> list[str]:
                 if link and link.get("title"):
                     search_results.append(link.get("title"))
 
-        # Prüfen auf "Meintest du"-Vorschläge
+        # Check for "Did you mean" suggestions
         did_you_mean = soup.find("div", class_="searchdidyoumean")
         if did_you_mean:
             link = did_you_mean.find("a")
             if link and link.get("title") and link.get("title") not in search_results:
                 search_results.append(link.get("title"))
 
-        # Prüfen auf exakte Übereinstimmung oder Weiterleitungen
+        # Check for exact matches
         exact_match = soup.find("p", class_="mw-search-exists")
         if exact_match:
             link = exact_match.find("a")
@@ -149,7 +137,7 @@ def check_available_wikipedia_articles(possible_title: str) -> list[str]:
                 search_results.insert(
                     0,
                     link.get("title"),
-                )  # An erster Stelle einfügen
+                )
 
         return search_results  # noqa: TRY300
 
